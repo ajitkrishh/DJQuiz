@@ -19,8 +19,11 @@ class QuestionAdmin(admin.ModelAdmin):
     inlines = [ QuestionSetInline]
 
 
-# class TestAdmin(admin.ModelAdmin):
-#     filter_horizontal = ('question',)
+class TestAdmin(admin.ModelAdmin):
+    list_display = ['username' , 'topic' , 'score' , 'updated_at']
+    list_select_related = ['user' , 'topic']
+    def username(self,obj):
+        return obj.user.username
 
 class TopicAdmin(admin.ModelAdmin):
     list_display = ['name' , 'question_count']
@@ -38,4 +41,4 @@ class TopicAdmin(admin.ModelAdmin):
   
 admin.site.register(Topic,TopicAdmin)
 admin.site.register(Question,QuestionAdmin)
-admin.site.register(Test)
+admin.site.register(Test,TestAdmin)

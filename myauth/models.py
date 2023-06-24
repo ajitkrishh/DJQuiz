@@ -10,8 +10,8 @@ def stringUUID():
 class Basemodel(models.Model):
 
     id = models.CharField(primary_key=True , default=stringUUID,editable=False , unique=True,max_length = 36)
-    created_at = models.DateField(auto_now= True)
-    updated_at = models.DateField(  auto_now_add=True)
+    created_at = models.DateTimeField(auto_now= True)
+    updated_at = models.DateTimeField(  auto_now_add=True)
     
 
     class Meta:

@@ -82,11 +82,13 @@ class FetchQuestion(LoginRequiredMixin,View):
         question = QuestionSet.objects.filter(question_id = question)\
                     .select_related('question','option')\
                     .values_list('question_id','question__question','option_id', 'option__name')
-            
+        # extracting options
         options = [ row[2:] for row in question]
+        # extracting question
         question = tuple(question[0][:2])
+
         context = {'question' : question , 'options' : options,"code":201 }
-        print(context)
+        # print(context)
         return JsonResponse(context)
     
     def post(self,request):

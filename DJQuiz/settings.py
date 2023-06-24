@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from django.contrib.messages import constants
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'myauth',
+    'Quiz',
+    
 ]
 
 MIDDLEWARE = [
@@ -54,7 +59,7 @@ ROOT_URLCONF = 'DJQuiz.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR , 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,3 +126,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# manual setting 
+AUTH_USER_MODEL = 'myauth.User'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "login"
+
+MESSAGE_TAGS = {
+    constants.ERROR:'danger' 
+    #helps in bootstrap formatting .
+}
+
+STATICFILES_DIRS = [
+    BASE_DIR/'STATIC'
+]
+STATIC_ROOT = os.path.join(BASE_DIR,'static/')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')

@@ -1,0 +1,91 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Register</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
+
+</head>
+
+<body>
+  <div class="login-page">
+    <div class="container m-3 p-3">
+      <div class="card ">
+        <div class="card-content">
+          <p class="title is-4">DJQuiz</p>
+          <p class="subtitle is-6">Register here</p>
+
+          <!-- Form Panel    -->
+          <div class="error">
+            {% for error in form.non_field_errors %}
+            <p class="notification is-warning">
+              {{error}}
+            </p>
+            {% endfor %}
+          </div>
+
+          <form class="register-form py-5 w-100" method="post">
+            {% csrf_token %}
+
+            <div class="columns">
+
+              <div class="column is-one-quarter">Username</div>
+              <div class="column is-three-quarter">
+                <input class="input" id="login-username" type="text" name="username" required value="123">
+                <div class="error">
+                  {% for error in form.username.errors %}
+                  <p class="notification is-danger">
+                    {{error}}
+                  </p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="columns">
+
+              <div class="column is-one-quarter">password</div>
+              <div class="column is-three-quarter">
+                <input class="input" id="login-password1" type="password" name="password1" required value="123">
+                <div class="error">
+                  {% for error in form.password1.errors %}
+                  <p class="notification is-danger">
+                    {{error}}
+                  </p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div class="columns">
+              <div class="column is-one-quarter">Confirm password</div>
+              <div class="column is-three-quarter">
+                <input class="input" id="login-password2" type="password" name="password2" required value="123">
+                <div class="error mt-2">
+                  {% for error in form.password2.errors %}
+                  <p class="notification is-danger">
+                    {{error}}
+                  </p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <input type="submit" value="Register" class="button is-primary">
+          </form>
+          <div class="container is-flex">
+            <p class="subtitle is-5 mx-4 pt-2">Already Registered ? </p>
+            <a href="{% url 'login' %}" class="button is-info">Login</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

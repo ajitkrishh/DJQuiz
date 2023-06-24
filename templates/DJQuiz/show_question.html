@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container box mt-4">
+    <div class="columns">
+        <div class="column is-8">
+            <div class="title is-3">
+                Your question is:
+            </div>
+        </div>
+        <div class="column">
+            <div class="title is-5">
+                Time left :
+                <span id="time_l"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="subtitle">
+        <h2 id="d-question"></h2>
+    </div>
+    <form action="{% url 'question' %}" method="post" id="id_form" onsubmit="submitForm(event)">
+        {% csrf_token %}
+        <input type="hidden" name="question" id="question-id" value="">
+        <div class="container" id="show-option">
+        </div>
+        <button class="button is-primary my-1" type="submit">Submit</button>
+    </form>
+</div>
+
+{% endblock content %}
+
+{% block scriptBloack %}
+<script>
+    fetchData();
+    let update = setInterval(() => {
+        let div = document.getElementById('time_l');
+        let num = parseInt(div.innerText);
+        // console.log((num));
+        if (num == 1) {
+            submitForm(new Event('submit'));
+        }
+        div.innerHTML = num - 1;
+    }, 1010)
+
+    function submitForm(event) {
+        event.preventDefault();
+        var form = document.getElementById('id_form');
+        fetch("{% url 'question' %}", {
+            method: form.method,
+            body: new FormData(form)
+        })
+            .then(function (response) {
+                fetchData();
+            })
+            .catch(function (error) {
+                alert(error);
+            });
+    }
+
+    function fetchData() {
+        let host = location.origin
+        var url = host + '{% url "question" %}'; // Replace with your backend URL
+        console.log(url);
+        fetch(url)
+            .then(function (response) {
+                console.log(response);
+                if (response.redirected == true) {
+                    window.location.href = response.url;
+                }
+                if (!response.ok) {
+                    alert("something went wrong, you are being redirected to home page !!!")
+                    window.location.href = location.origin;
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                console.log(data);
+                if (data.code == 201) {
+                    document.getElementById('d-question').innerHTML = data.question[1];
+                    document.getElementById('question-id').value = data.question[0];
+                    let holder = document.getElementById('show-option');
+                    let txt = "";
+                    for (let i of data.options) {
+                        txt += `<input type="checkbox" name="option[]" id="option_id" value="${i[0]}"> 
+                   <label class="checkbox" for="option_id">${i[1]}</label> <br>
+                   `
+                    }
+                    holder.innerHTML = txt;
+                    let div = document.getElementById('time_l');
+                    div.innerHTML = 10;
+
+                } else  {
+                    alert("something went wrong, you are being redirected to home page !!!")
+                    window.location.href = location.origin;
+                }
+                
+
+            })
+            .catch(function (error) {
+                console.error('Error fetching data:', error);
+            });
+    }
+
+</script>
+{% endblock scriptBloack %}

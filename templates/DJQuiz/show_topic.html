@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-half my-5 has-text-centered">
+            <div class="title is-2">
+                <h2>Choose a topic for your test.</h2>
+            </div>
+            <form  method="post">
+                {% csrf_token %}
+                <div class="select is-info">
+                    <select name="topic" id="topic_id">
+                    <option value=""> select topic</option>
+                    {% for topic in topics %}
+                    <option value="{{topic.id}}">{{topic.name}}</option>
+                    {% endfor %}
+                </select>
+                </div>
+                <input type="submit" class="button is-primary" value="Submit">
+            </form>
+        </div>
+    </div>  
+    </div>
+
+{% endblock content %}

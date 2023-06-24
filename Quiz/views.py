@@ -1,22 +1,18 @@
-import json
-from typing import List
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import ListView
-'''
-'''
+
 from .models import (
-    Topic , Question,Option,QuestionSet,Test
+    Topic , Question,QuestionSet,Test
 )
 
 
 class TopicListView(LoginRequiredMixin,View):
     def get(self,request):
-
+        # reset session
         key =request.user.id
         request.session[f'{key}-start'] = False
         request.session[f'{key}-score'] = None
@@ -29,43 +25,45 @@ class TopicListView(LoginRequiredMixin,View):
         return render(request , 'DJQuiz/show_topic.html', context)
     
     def post(self,request):
-        try:
-            topicid_ = request.POST.get('topic' , None)
-            if not topicid_:
-                messages.error(request,'select any one topic !!!')
-                return redirect('topiclist')
-            
-            questions = Question.objects.filter(topic_id = topicid_).values_list('id' , flat=True).order_by('?')[:10]
-            if len(questions) == 0:
-                messages.error(request,'No questions  !!!')
-                return redirect('topiclist')
-            
-            new_test = Test.objects.create(
-                user = request.user,
-                total_question = len(questions),
-                topic_id = topicid_
-            )
-            key = request.user.id
-            request.session[f'{key}-start'] = True
-            request.session[f'{key}-score'] = 0
-            request.session[key] = list(questions) 
-            request.session[f'{key}-test'] = new_test.id
-
-            return redirect('test')
-        
-        except Exception as e:
-            print(e)
-            messages.error(request,'something went wrong')
+    
+        topicid_ = request.POST.get('topic' , None)
+        if not topicid_:
+            messages.error(request,'select any one topic !!!')
             return redirect('topiclist')
-
-
+        
+        questions = Question.objects.filter(topic_id = topicid_).values_list('id' , flat=True).order_by('?')[:10]
+        # if topic has no questions added.
+        if len(questions) == 0:
+            messages.error(request,'No questions  !!!')
+            return redirect('topiclist')
+        # create test instance
+        new_test = Test.objects.create(
+            user = request.user,
+            total_question = len(questions),
+            topic_id = topicid_
+        )
+        # initialize session varibales.
+        key = request.user.id
+        request.session[f'{key}-start'] = True
+        request.session[f'{key}-score'] = 0
+        request.session[f'{key}-test'] = new_test.id
+        # push all the question ids in session list, on each request , one question is popped and sent to frontend 
+        request.session[key] = list(questions) 
+        return redirect('test')
+    
 class FetchQuestion(LoginRequiredMixin,View):
+    '''
+    ajax view, handle sending one question at a time and also accepts its answer.
+    '''
     def get(self,request):
         key = request.user.id
+        
         if not request.session[f'{key}-start'] :
             return redirect('topiclist')
-         
+        # getting question list
         questions = request.session[key]
+
+        # if there are no question, finish the test and redirect to result page
         if len(questions) < 1:
             # here all questions are attemmpted, update the test result ....
             test_id = request.session[f'{key}-test']
@@ -92,6 +90,7 @@ class FetchQuestion(LoginRequiredMixin,View):
         return JsonResponse(context)
     
     def post(self,request):
+        
         key = request.user.id
         qid = request.POST.get('question' , None)
         option = request.POST.getlist('option[]' , None)
@@ -102,7 +101,7 @@ class FetchQuestion(LoginRequiredMixin,View):
             return redirect('topiclist')
         
         opt = QuestionSet.objects.filter(question_id = qid , is_true = True).values_list('option_id' , flat=True) 
-        
+        # checking is user answer is true or not
         if set(option) == set(opt):
             score = request.session[f'{key}-score']
             request.session[f'{key}-score'] = score + 1
@@ -111,6 +110,7 @@ class FetchQuestion(LoginRequiredMixin,View):
 
 class TestView(LoginRequiredMixin,View):
     def get(self,request):
+        '''view is to render a page only , all questions are fetched using javascript ajax requests , from frontend.'''
         return render(request , 'DJQuiz/show_question.html')
         
 class ResultListView(ListView):

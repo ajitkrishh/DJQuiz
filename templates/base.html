@@ -20,14 +20,12 @@
             <div class="navbar-start">
                 <a class="navbar-item" href="{% url 'result' %}">
                     Result
-                </div>
+                </a>
             </div>
         </div>
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
-                    <!-- <a href="" class="button is-primary"><strong>Register</strong></a>
-                    <a href="" class="button is-link"><strong>Login</strong></a> -->
                     <a href="{% url 'logout' %}" class="button is-danger"><strong>Logout</strong></a>
                 </div>
             </div>
@@ -46,7 +44,7 @@
     {% endblock content %}
 </body>
 
-
+<script src="{% static 'js/jquery.js' %}"></script>
 {% block scriptBloack %}
     
 {% endblock scriptBloack %}

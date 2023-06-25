@@ -38,7 +38,7 @@
 
               <div class="column is-one-quarter">Username</div>
               <div class="column is-three-quarter">
-                <input class="input" id="login-username" type="text" name="username" required value="123">
+                <input class="input" id="login-username" type="text" name="username" required >
                 <div class="error">
                   {% for error in form.username.errors %}
                   <p class="notification is-danger">
@@ -52,7 +52,7 @@
 
               <div class="column is-one-quarter">password</div>
               <div class="column is-three-quarter">
-                <input class="input" id="login-password1" type="password" name="password1" required value="123">
+                <input class="input" id="login-password1" type="password" name="password1" required >
                 <div class="error">
                   {% for error in form.password1.errors %}
                   <p class="notification is-danger">
@@ -65,7 +65,7 @@
             <div class="columns">
               <div class="column is-one-quarter">Confirm password</div>
               <div class="column is-three-quarter">
-                <input class="input" id="login-password2" type="password" name="password2" required value="123">
+                <input class="input" id="login-password2" type="password" name="password2" required >
                 <div class="error mt-2">
                   {% for error in form.password2.errors %}
                   <p class="notification is-danger">

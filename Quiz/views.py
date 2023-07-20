@@ -1,15 +1,106 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
-from django.views import View
-from django.views.generic import ListView
-from django.urls import reverse
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.contrib import messages
+# from django.http import JsonResponse
+# from django.shortcuts import redirect, render
+# from django.views import View
+# from django.views.generic import ListView
+# from django.urls import reverse
 
 # rest
 
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+# from django.core.serializers.python import Serializer 
+# from django.forms.models import model_to_dict
 from .models import Topic, Question, QuestionSet, Test
 
+
+class TopicApiView(generics.ListAPIView):
+    def get(self, request, *args, **kwargs):
+        list = Topic.objects.values("id", "name")
+        r:Response = Response(list)
+        # print(request.user)
+        return r
+    def post(self, request, *args, **kwargs):
+        topicid_ = request.data.get("topic", None)
+        if not topicid_:
+            raise NotFound("topic")
+
+        questions = (
+            Question.objects.filter(topic_id=topicid_)
+            .values_list("id", flat=True)
+            .order_by("?")[:10]
+        )
+        # if topic has no questions added.
+        # print(questions)
+        if len(questions) == 0:
+            return Response(    
+                {   
+                    "msg": "No question Found",
+                    "redirect": True,
+                }
+            )
+        # create test instance
+        new_test = Test.objects.create(
+            user=request.user, total_question=len(questions), topic_id=topicid_
+        )
+        questions = (
+            QuestionSet.objects.filter(question_id__in=questions)
+            .select_related("question", "option")
+            .values_list(
+                "question_id", "question__question", "option_id", "option__name"
+            )
+        )
+        # grouping options per question.
+        d = {}
+        for i in questions:
+            q = d.get(i[0], None)
+            if not q:
+                d[i[0]] = [i[1], i[2:]]
+            else:
+                d[i[0]].append(i[2:])
+        questions = d
+
+        return Response({"qs": questions})
+
+
+class ResultApiView(generics.ListAPIView):
+    def get(self, request, *args, **kwargs):
+        result = Test.objects.filter(user=request.user)\
+                .select_related('topic')\
+                .values('score','total_question','topic__name' , 'updated_at')\
+                .order_by('-updated_at')
+        return Response({"data": result})
+
+    def post(self, request, *args, **kwargs):
+        testobj = Test.objects.filter(user=request.user).last()
+        question_ans = request.data.get("payload")
+        q_ids = question_ans.keys()
+        ans = QuestionSet.objects.filter(question__in=q_ids, is_true=True).values_list(
+            "question_id", "option_id"
+        )
+        # print(ans  , q_ids)
+        d = {}
+        for i in ans:
+            j = d.get(i[0], None)
+            if j:
+                j.append(i[1])
+            else:
+                d[i[0]] = [i[1]]
+        ans = d
+        score = 0
+        for i,j in ans.items():
+            user_ans = question_ans[i]
+            if user_ans == j:
+                score+=1
+        testobj.score = score
+        testobj.save()
+        return Response({"msg": True,'score':score})
+
+
+'''
 
 class TopicListView(LoginRequiredMixin, View):
     def get(self, request):
@@ -136,95 +227,5 @@ class ResultListView(ListView):
         )
         return qs
 
-
+'''
 # rest views
-
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
-from django.core.serializers.python import Serializer 
-from django.forms.models import model_to_dict
-
-
-class TopicApiView(generics.ListAPIView):
-    def get(self, request, *args, **kwargs):
-        list = Topic.objects.values("id", "name")
-        r:Response = Response(list)
-        print(request.user)
-        return r
-    def post(self, request, *args, **kwargs):
-        topicid_ = request.data.get("topic", None)
-        if not topicid_:
-            raise NotFound("topic")
-
-        questions = (
-            Question.objects.filter(topic_id=topicid_)
-            .values_list("id", flat=True)
-            .order_by("?")[:10]
-        )
-        # if topic has no questions added.
-        print(questions)
-        if len(questions) == 0:
-            return Response(    
-                {   
-                    "msg": "No question Found",
-                    "redirect": True,
-                }
-            )
-        # create test instance
-        new_test = Test.objects.create(
-            user=request.user, total_question=len(questions), topic_id=topicid_
-        )
-        questions = (
-            QuestionSet.objects.filter(question_id__in=questions)
-            .select_related("question", "option")
-            .values_list(
-                "question_id", "question__question", "option_id", "option__name"
-            )
-        )
-        # grouping options per question.
-        d = {}
-        for i in questions:
-            q = d.get(i[0], None)
-            if not q:
-                d[i[0]] = [i[1], i[2:]]
-            else:
-                d[i[0]].append(i[2:])
-        questions = d
-
-        return Response({"qs": questions})
-
-
-class ResultApiView(generics.ListAPIView):
-    def get(self, request, *args, **kwargs):
-        result = Test.objects.filter(user=request.user)\
-                .select_related('topic')\
-                .values('score','total_question','topic__name' , 'updated_at')\
-                .order_by('-updated_at')
-        return Response({"data": result})
-
-    def post(self, request, *args, **kwargs):
-        testobj = Test.objects.filter(user=request.user).last()
-        question_ans = request.data.get("payload")
-        q_ids = question_ans.keys()
-        ans = QuestionSet.objects.filter(question__in=q_ids, is_true=True).values_list(
-            "question_id", "option_id"
-        )
-        # print(ans  , q_ids)
-        d = {}
-        for i in ans:
-            j = d.get(i[0], None)
-            if j:
-                j.append(i[1])
-            else:
-                d[i[0]] = [i[1]]
-        ans = d
-        score = 0
-        for i,j in ans.items():
-            user_ans = question_ans[i]
-            if user_ans == j:
-                score+=1
-        testobj.score = score
-        testobj.save()
-        return Response({"msg": True,'score':score})
-
